@@ -14,6 +14,10 @@ PUSH = 0b01000101
 POP = 0b01000110
 CALL = 0b01010000
 RET = 0b00010001
+CMP = 0b10100111
+JMP = 0b01010100
+JEQ = 0b01010101
+JNE = 0b01010110
 
 
 class CPU:
@@ -27,6 +31,7 @@ class CPU:
         self.halted = False
         self.reg[SP] = 0XF4
         self.op_pc = False
+        self.equal = 0b00000000
 
     def load(self):
         """Load a program into memory."""
@@ -77,6 +82,19 @@ class CPU:
             self.reg[reg_a] += self.reg[reg_b]
         elif op == "MUL":
             self.reg[reg_a] *= self.reg[reg_b]
+        elif op == "CMP":
+            if reg_a == reg_b:
+                self.equal = 0b01
+            else:
+                self.equal = 0b0
+            if reg_a < reg_b:
+                self.equal = 0b01
+            else:
+                self.equal = 0b0
+            if reg_a > reg_b:
+                self.equal = 0b01
+            else:
+                self.equal = 0b0
         #elif op == "SUB": etc
         else:
             raise Exception("Unsupported ALU operation")
@@ -174,10 +192,37 @@ class CPU:
                 self.pc = self.ram[self.reg[SP]]
                 self.reg[SP] += 1
                 self.op_pc = True
+
+            elif cmd == CMP:
+                self.alu("CMP", operand_a, operand_b)
+                print(operand_b)
+                inc_size = 2
+                self.op_pc = False
             
-            # else:
-            #     print(f"Invalid Instruction: {cmd}")
-            #     self.halted = False
+            elif cmd == JMP:
+                self.pc = self.reg[operand_a]
+                inc_size = 2
+                self.op_pc = False
+
+            elif cmd == JEQ:
+                if self.equal:
+                    self.pc = self.reg[operand_a]
+                else:
+                    self.pc += 2
+                inc_size = 2
+                self.op_pc = False
+
+            elif cmd == JNE:
+                if not self.equal:
+                    self.pc = self.reg[operand_a]
+                else:
+                    self.pc += 2
+                inc_size = 2
+                self.op_pc = False
+            
+            else:
+                print(f"Invalid Instruction: {cmd}")
+                self.halted = False
 
             if not self.op_pc:
                 self.pc += inc_size 
