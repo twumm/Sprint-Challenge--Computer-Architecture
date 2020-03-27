@@ -222,7 +222,7 @@ class CPU:
                 self.op_pc = True
 
             elif cmd == JNE:
-                if not self.flag and not equal:
+                if self.flag != equal:
                     self.pc = self.reg[operand_a]
                 else:
                     self.pc += 2
