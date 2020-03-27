@@ -19,6 +19,10 @@ JMP = 0b01010100
 JEQ = 0b01010101
 JNE = 0b01010110
 
+less = 0b00000100
+equal = 0b00000001
+greater = 0b00000010
+
 
 class CPU:
     """Main CPU class."""
@@ -31,7 +35,7 @@ class CPU:
         self.halted = False
         self.reg[SP] = 0XF4
         self.op_pc = False
-        self.equal = 0b00000000
+        self.flag = 0b00
 
     def load(self):
         """Load a program into memory."""
@@ -98,18 +102,12 @@ class CPU:
         elif op == "MOD":
             self.reg[reg_a] = self.reg[reg_a] % self.reg[reg_b]
         elif op == "CMP":
-            if reg_a == reg_b:
-                self.equal = 0b00000010 # 2
-            else:
-                self.equal = 0b0
-            if reg_a < reg_b:
-                self.equal = 0b00000100 # 4
-            else:
-                self.equal = 0b0
-            if reg_a > reg_b:
-                self.equal = 0b00000001 # 1
-            else:
-                self.equal = 0b0
+            if self.reg[reg_a] == self.reg[reg_b]:
+                self.flag = equal
+            elif self.reg[reg_a] < self.reg[reg_b]:
+                self.flag = less
+            elif self.reg[reg_a] > self.reg[reg_b]:
+                self.flag = greater
         #elif op == "SUB": etc
         else:
             raise Exception("Unsupported ALU operation")
@@ -120,9 +118,9 @@ class CPU:
         from run() if you need help debugging.
         """
 
-        print(f"TRACE: %02X | %02X %02X %02X |" % (
+        print(f"TRACE: %02X | %02X %02X %02X %02X |" % (
             self.pc,
-            #self.fl,
+            self.flag,
             #self.ie,
             self.ram_read(self.pc),
             self.ram_read(self.pc + 1),
@@ -144,6 +142,7 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
+        # self.trace()
         inc_size = 0
         while not self.halted:
             cmd = self.ram_read(self.pc)
@@ -175,8 +174,6 @@ class CPU:
                 self.alu("MUL", operand_a, operand_b)
                 inc_size = 3
                 self.op_pc = False
-                # mul = self.reg[operand_a] * self.reg[operand_b]
-                # print(mul)
 
             elif cmd == PUSH:
                 # reg_index = self.ram_read(self.pc + 1) # operand_a defined already
@@ -210,7 +207,7 @@ class CPU:
 
             elif cmd == CMP:
                 self.alu("CMP", operand_a, operand_b)
-                inc_size = 2
+                inc_size = 3
                 self.op_pc = False
             
             elif cmd == JMP:
@@ -218,14 +215,14 @@ class CPU:
                 self.op_pc = True
 
             elif cmd == JEQ:
-                if self.equal:
+                if self.flag == equal:
                     self.pc = self.reg[operand_a]
                 else:
                     self.pc += 2
                 self.op_pc = True
 
             elif cmd == JNE:
-                if not self.equal:
+                if not self.flag and not equal:
                     self.pc = self.reg[operand_a]
                 else:
                     self.pc += 2
