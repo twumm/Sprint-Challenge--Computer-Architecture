@@ -82,17 +82,32 @@ class CPU:
             self.reg[reg_a] += self.reg[reg_b]
         elif op == "MUL":
             self.reg[reg_a] *= self.reg[reg_b]
+        elif op == "AND":
+            self.reg[reg_a] = self.reg[reg_a] & self.reg[reg_b]
+        # `MOD`
+        elif op == "OR":
+            self.reg[reg_a] = self.reg[reg_a] | self.reg[reg_b]
+        elif op == "XOR":
+            self.reg[reg_a] = self.reg[reg_a] ^ self.reg[reg_b]
+        elif op == "NOT":
+            self.reg[reg_a] = ~self.reg[reg_a]
+        elif op == "SHL":
+            self.reg[reg_a] = self.reg[reg_a] << self.reg[reg_b]
+        elif op == "SHR":
+            self.reg[reg_a] = self.reg[reg_a] >> self.reg[reg_b]
+        elif op == "MOD":
+            self.reg[reg_a] = self.reg[reg_a] % self.reg[reg_b]
         elif op == "CMP":
             if reg_a == reg_b:
-                self.equal = 0b01
+                self.equal = 0b00000010 # 2
             else:
                 self.equal = 0b0
             if reg_a < reg_b:
-                self.equal = 0b01
+                self.equal = 0b00000100 # 4
             else:
                 self.equal = 0b0
             if reg_a > reg_b:
-                self.equal = 0b01
+                self.equal = 0b00000001 # 1
             else:
                 self.equal = 0b0
         #elif op == "SUB": etc
@@ -195,30 +210,26 @@ class CPU:
 
             elif cmd == CMP:
                 self.alu("CMP", operand_a, operand_b)
-                print(operand_b)
                 inc_size = 2
                 self.op_pc = False
             
             elif cmd == JMP:
                 self.pc = self.reg[operand_a]
-                inc_size = 2
-                self.op_pc = False
+                self.op_pc = True
 
             elif cmd == JEQ:
                 if self.equal:
                     self.pc = self.reg[operand_a]
                 else:
                     self.pc += 2
-                inc_size = 2
-                self.op_pc = False
+                self.op_pc = True
 
             elif cmd == JNE:
                 if not self.equal:
                     self.pc = self.reg[operand_a]
                 else:
                     self.pc += 2
-                inc_size = 2
-                self.op_pc = False
+                self.op_pc = True
             
             else:
                 print(f"Invalid Instruction: {cmd}")
